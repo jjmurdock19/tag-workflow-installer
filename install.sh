@@ -53,7 +53,7 @@ if [ -z "$INSTALL_DIR" ]; then
     if [ "$ASSUME_YES" = "1" ]; then
         INSTALL_DIR="$DEFAULT_TAG_HOME"
     else
-        read -rp "Install location [$DEFAULT_TAG_HOME]: " reply
+        read -rp "Install location [$DEFAULT_TAG_HOME]: " reply < /dev/tty
         INSTALL_DIR="${reply:-$DEFAULT_TAG_HOME}"
     fi
 fi
@@ -67,7 +67,7 @@ if [ -z "$WANT_SHORTCUTS" ]; then
     if [ "$ASSUME_YES" = "1" ]; then
         WANT_SHORTCUTS=1
     else
-        read -rp "Create desktop + start menu shortcuts? [Y/n] " reply
+        read -rp "Create desktop + start menu shortcuts? [Y/n] " reply < /dev/tty
         case "$reply" in
             [nN]*) WANT_SHORTCUTS=0 ;;
             *) WANT_SHORTCUTS=1 ;;

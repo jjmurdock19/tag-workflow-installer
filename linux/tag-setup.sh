@@ -10,7 +10,7 @@ DOWNLOADER_CONFIG="$HOME/.tag_downloader/config.json"
 ASPEN_BIN="$TAG_HOME/opt/Aspen-current/bin/run_aspen"
 DOWNLOADER_BIN="$TAG_HOME/opt/TAG_Downloader/TAG_Downloader"
 
-read -rp "Storm name/ID (e.g. 20260728N1): " STORM_ID
+read -rp "Storm name/ID (e.g. 20260728N1): " STORM_ID < /dev/tty
 STORM_ID="$(echo -n "$STORM_ID" | xargs)"
 if [ -z "$STORM_ID" ]; then
     echo "Storm ID can't be empty." >&2
