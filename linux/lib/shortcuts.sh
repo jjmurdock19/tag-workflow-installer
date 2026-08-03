@@ -42,7 +42,7 @@ refresh_app_menu() {
 
 # check_missing_libs BINARY LIB_DIR
 # ldd's a binary, maps any missing deps to Fedora packages via `dnf provides`,
-# and prints the install command (never runs sudo itself).
+# and installs them via sudo dnf if TAG_AUTO_SUDO=1, else just prints the command.
 check_missing_libs() {
     local binary="$1" lib_dir="$2"
     local missing
@@ -60,7 +60,7 @@ check_missing_libs() {
     local lib
     for lib in $missing; do
         local pkg
-        pkg=$(dnf provides "*/${lib}" 2>/dev/null | grep -m1 -oP '^\S+(?=-\d[\w.+~-]*-\d)')
+        pkg=$(dnf provides "*/${lib}" 2>/dev/null | grep -m1 -oP '^\S+(?=-\d[\w.+~-]*-\d)') || true
         if [ -n "$pkg" ]; then
             echo "    $lib -> $pkg"
             pkgs+=("$pkg")
@@ -75,6 +75,12 @@ check_missing_libs() {
 
     local unique_pkgs
     unique_pkgs=$(printf '%s\n' "${pkgs[@]}" | sort -u | tr '\n' ' ')
-    echo "  this installer doesn't run as admin, so it won't install these itself. Run:"
-    echo "    sudo dnf install -y $unique_pkgs"
+
+    if [ "${TAG_AUTO_SUDO:-0}" = "1" ]; then
+        echo "  installing: sudo dnf install -y $unique_pkgs"
+        sudo dnf install -y $unique_pkgs
+    else
+        echo "  this installer doesn't run as admin, so it won't install these itself. Run:"
+        echo "    sudo dnf install -y $unique_pkgs"
+    fi
 }

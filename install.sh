@@ -8,6 +8,7 @@ DEFAULT_TAG_HOME="$HOME/.tag"
 INSTALL_DIR=""
 ASSUME_YES=0
 WANT_SHORTCUTS=""   # "" = ask, "0"/"1" = decided
+AUTO_SUDO=0
 
 usage() {
     cat <<EOF
@@ -17,6 +18,7 @@ Usage: install.sh [options]
   -y, --yes                Don't prompt; accept defaults (install dir, shortcuts on)
       --no-shortcuts        Skip creating desktop / start menu shortcuts
       --shortcuts           Create desktop / start menu shortcuts (skip the prompt)
+      --sudo                Auto-install missing shared-library packages via sudo dnf
   -h, --help                Show this help
 EOF
 }
@@ -33,6 +35,8 @@ while [ $# -gt 0 ]; do
             WANT_SHORTCUTS=0; shift ;;
         --shortcuts)
             WANT_SHORTCUTS=1; shift ;;
+        --sudo)
+            AUTO_SUDO=1; shift ;;
         -h|--help)
             usage; exit 0 ;;
         *)
@@ -79,6 +83,7 @@ if [ "$WANT_SHORTCUTS" = "1" ]; then
 else
     export TAG_SKIP_SHORTCUTS=1
 fi
+export TAG_AUTO_SUDO="$AUTO_SUDO"
 echo
 
 SRC_DIR="$TAG_HOME/src/tag-workflow-installer"
