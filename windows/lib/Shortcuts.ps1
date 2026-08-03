@@ -1,26 +1,10 @@
-#
-# Shortcuts.ps1 - dot-sourceable helpers for creating per-user Desktop/Start Menu
-# shortcuts. Mirrors the intent of tag-shortcuts-lib.sh's make_shortcut, adapted
-# to Windows .lnk files via the WScript.Shell COM object.
-#
-# All locations used here are per-user (no admin rights required):
-#   Desktop:    [Environment]::GetFolderPath('Desktop')
-#   Start Menu: [Environment]::GetFolderPath('Programs')
-#               (the per-user "Start Menu\Programs" folder - this is the folder
-#               Windows actually indexes into the Start Menu app list; the bare
-#               'StartMenu' special folder is one level up and is NOT reliably
-#               shown in the app list, so 'Programs' is used instead. Neither
-#               requires admin; 'CommonPrograms'/'CommonStartMenu' are avoided
-#               on purpose since those are machine-wide.)
-#
+# Shortcuts.ps1 - dot-sourceable helpers for creating per-user Desktop/Start
+# Menu shortcuts (.lnk files via the WScript.Shell COM object).
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Creates a .lnk shortcut under Desktop\TAG and/or Start Menu\Programs\TAG.
 function New-TagShortcut {
-    <#
-    Creates a .lnk shortcut under Desktop\TAG and/or Start Menu\Programs\TAG.
-    Best-effort: failures are reported as warnings, never terminate the caller.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$Name,
@@ -66,12 +50,8 @@ function New-TagShortcut {
     }
 }
 
+# Creates the "TAG Workflow" shortcut: opens a console running Tag-Setup.ps1.
 function New-TagWorkflowShortcut {
-    <#
-    Creates the primary "TAG Workflow" entry point: a shortcut that opens a
-    visible PowerShell console running Tag-Setup.ps1. -NoExit keeps the window
-    open after the script finishes so the user can read prompts/warnings.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$TagSetupScriptPath,
@@ -80,8 +60,6 @@ function New-TagWorkflowShortcut {
         [switch]$SkipStartMenu
     )
 
-    # Use the exe of the currently running PowerShell host (works for both
-    # Windows PowerShell 5.1's powershell.exe and PowerShell 7's pwsh.exe).
     $hostExe = $null
     try {
         $hostExe = (Get-Process -Id $PID -ErrorAction Stop).Path

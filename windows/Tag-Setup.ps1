@@ -1,12 +1,8 @@
-#
 # Tag-Setup.ps1
 #
 # Per-storm setup: creates Raw/Processed folders, points Aspen's config and
-# TAG Downloader's config at them, and launches both apps. Mirrors the Linux
-# tag-setup script; every config-patch step is best-effort and degrades
-# gracefully (warns and continues) since Aspen's Windows config location and
-# the Qt ini-file fallback are both unverified on a real Windows box.
-#
+# TAG Downloader's config at them, and launches both apps. Config patches are
+# best-effort and warn/continue on failure rather than aborting.
 [CmdletBinding()]
 param(
     [string]$InstallDir = $(if ($env:TAG_HOME) { $env:TAG_HOME } else { Join-Path $env:USERPROFILE 'tag' })
@@ -21,7 +17,6 @@ $DownloaderConfig = Join-Path $env:USERPROFILE '.tag_downloader\config.json'
 $AspenPathMarker  = Join-Path $TagHome 'opt\aspen-path.txt'
 $DownloaderExe    = Join-Path $TagHome 'opt\TAG_Downloader\TAG_Downloader.exe'
 
-# --- storm ID ---
 $StormId = (Read-Host "Storm name/ID (e.g. 20260728N1)").Trim()
 if ([string]::IsNullOrWhiteSpace($StormId)) {
     Write-Error "Storm ID can't be empty."
@@ -40,7 +35,6 @@ Write-Host "Storm folders ready:"
 Write-Host "  Raw:       $RawDir"
 Write-Host "  Processed: $ProcessedDir"
 
-# --- Aspen config ---
 function Set-AspenOptionValue {
     param([string]$Content, [string]$OptionName, [string]$Value)
     $escaped = $Value -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;'
@@ -68,9 +62,6 @@ if ($aspenConfig) {
 
         $content = Get-Content -Path $aspenConfig -Raw
 
-        # DataDir/RawSaveDir/FixedSrcDir only sync the *directory* Aspen reads
-        # from - not the per-profile Enabled flag for FixedSrcDir, which is
-        # left as the user configured it (matches the Linux script).
         $rawDirOptions = @('DataDir', 'RawSaveDir', 'FixedSrcDir')
         $processedDirOptions = @('QCSaveDir', 'WmoSaveDir', 'XYPlotSaveDir', 'SkewTPlotSaveDir', 'BatchSaveDir', 'QCAutoSaveDir')
         $boolOptions = @('QCAutoSaveEnable', 'QCAutoSaveFmtBufr', 'WmoAutoSaveFmtTxt', 'SkewtAutoSaveFmtPng')
@@ -93,7 +84,6 @@ else {
     Write-Warning "Aspen config not found in any known location (checked: $($aspenConfigCandidates -join ', ')). Launch Aspen once to create it, then re-run Tag-Setup.ps1 to sync data folders."
 }
 
-# --- Qt file-dialog last-visited (best-effort, cosmetic only) ---
 $qtConfigPath = Join-Path $env:APPDATA 'QtProject\QtProject.conf'
 if (Test-Path $qtConfigPath) {
     try {
@@ -135,11 +125,9 @@ if (Test-Path $qtConfigPath) {
     }
 }
 else {
-    # Most Windows Qt builds use the registry, not an ini file - this is expected and fine.
     Write-Host "Qt file dialog config not found at $qtConfigPath (cosmetic only); skipping."
 }
 
-# --- TAG Downloader config ---
 try {
     $downloaderConfigDir = Split-Path $DownloaderConfig -Parent
     New-Item -ItemType Directory -Force -Path $downloaderConfigDir | Out-Null
@@ -191,7 +179,6 @@ catch {
     Write-Warning "Failed to update TAG Downloader config ($DownloaderConfig): $($_.Exception.Message)"
 }
 
-# --- launch apps ---
 Write-Host ""
 if (Test-Path $DownloaderExe) {
     Write-Host "Starting TAG Downloader..."
@@ -211,9 +198,6 @@ if (Test-Path $AspenPathMarker) {
 
 if ($aspenExe) {
     Write-Host "Starting Aspen..."
-    # -Wait ties this script's lifetime to Aspen's, mirroring the Linux
-    # script's `exec aspen` handoff (the console stays open afterward only
-    # because the launching shortcut uses -NoExit, so warnings stay readable).
     Start-Process -FilePath $aspenExe -WorkingDirectory (Split-Path $aspenExe -Parent) -Wait
 }
 else {

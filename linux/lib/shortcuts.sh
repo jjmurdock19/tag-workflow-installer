@@ -1,8 +1,4 @@
 # Shared by install-aspen.sh and install-tag-downloader.sh.
-#
-# TAG_SKIP_SHORTCUTS=1 (set by install.sh when the user declines shortcuts)
-# makes make_shortcut a no-op so both scripts stay callable standalone with
-# their original default behavior (shortcuts on) when TAG_SKIP_SHORTCUTS is unset.
 
 # make_shortcut NAME EXEC_PATH ICON_PATH WORKDIR TERMINAL(true|false) CATEGORY
 make_shortcut() {
@@ -45,10 +41,8 @@ refresh_app_menu() {
 }
 
 # check_missing_libs BINARY LIB_DIR
-# ldd's a binary (with LIB_DIR on LD_LIBRARY_PATH), finds any "not found" deps,
-# maps them to Fedora packages via `dnf provides`, and prints the install
-# command for the user to run themselves. This installer runs with no admin
-# privileges, so it never calls sudo on the user's behalf.
+# ldd's a binary, maps any missing deps to Fedora packages via `dnf provides`,
+# and prints the install command (never runs sudo itself).
 check_missing_libs() {
     local binary="$1" lib_dir="$2"
     local missing

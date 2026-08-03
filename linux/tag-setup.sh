@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# Sets up the TAG workflow for one storm: creates Raw/Processed folders under
-# TAG_HOME/Data, points Aspen's Directories/Auto Save settings and TAG
-# Downloader's local/remote dirs at them, then launches both apps.
-#
-# Standalone-runnable: defaults TAG_HOME to ~/.tag if not already exported.
+# Sets up Raw/Processed folders for a storm, points Aspen and TAG Downloader at them, and launches both.
 set -euo pipefail
 
 TAG_HOME="${TAG_HOME:-$HOME/.tag}"
@@ -46,12 +42,7 @@ config_path, raw_dir, processed_dir = sys.argv[1:4]
 with open(config_path, "r", encoding="utf-8") as f:
     xml = f.read()
 
-# "Directories" preferences: where Aspen looks for raw soundings and where
-# manual "Save" actions for each product land. FixedSrcDir is the "Fixed
-# Data Source and Destination Directory" option, which, when its per-profile
-# Enabled flag is on, overrides the open dialog's default location (left
-# as whatever the user has it set to per profile - only the directory
-# itself is synced here).
+# directories Aspen reads from / saves to (FixedSrcDir's own Enabled flag is left alone)
 string_values = {
     "DataDir": raw_dir,
     "RawSaveDir": raw_dir,
@@ -63,7 +54,6 @@ string_values = {
     "BatchSaveDir": processed_dir,
     "QCAutoSaveDir": processed_dir,
 }
-# "Auto Save" tab: automatically save output products for every file opened.
 bool_values = {
     "QCAutoSaveEnable": "true",
     "QCAutoSaveFmtBufr": "true",
@@ -92,10 +82,7 @@ else
     echo "warning: $ASPEN_CONFIG not found; launch Aspen once to create it, then re-run tag-setup." >&2
 fi
 
-# Qt's native file-open dialog remembers its last-visited folder in this
-# desktop-wide settings file, independent of aspen.xml's DataDir - without
-# this, Aspen's Open dialog keeps opening in the previous storm's folder
-# until you manually browse to the new one.
+# independent of aspen.xml's DataDir, or Aspen's Open dialog keeps opening in the last storm's folder
 echo "Configuring file-open dialog default location ($QT_FILEDIALOG_CONFIG)..."
 [ -f "$QT_FILEDIALOG_CONFIG" ] && cp -f "$QT_FILEDIALOG_CONFIG" "$QT_FILEDIALOG_CONFIG.bak"
 python3 - "$QT_FILEDIALOG_CONFIG" "$RAW_DIR" <<'PYEOF'
@@ -161,9 +148,6 @@ if os.path.exists(config_path):
     except (json.JSONDecodeError, OSError):
         pass
 
-# New storm: point at its remote folder (adjust in-app if the server layout
-# differs) and its local Raw folder, and drop the previous storm's seen-files
-# baseline so nothing from this storm is skipped.
 settings["remote_dir"] = f"/{storm_id}"
 settings["local_dir"] = raw_dir
 settings["seen_files"] = []

@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
-# Installs the latest Linux x86_64 build of Aspen (NCAR/EOL sounding QC tool)
-# from https://www.eol.ucar.edu/software/aspen, checks for missing shared
-# library dependencies (no admin privileges used - see lib/shortcuts.sh), and
-# (re)creates the desktop + start menu launcher.
-#
-# Standalone-runnable: defaults TAG_HOME to ~/.tag if not already exported.
+# Installs the latest Linux x86_64 Aspen build from eol.ucar.edu and creates its shortcuts.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,8 +17,6 @@ fi
 echo "Checking $PAGE_URL for available builds..."
 page_html=$(curl -sL "$PAGE_URL")
 
-# Every Linux x86_64 tarball link on the page, e.g.:
-#   https://archive.eol.ucar.edu/docs/software/aspen/AspenV4.1.1_RedHatEnterpriseLinux9.7_x86_64.tar.gz
 mapfile -t urls < <(grep -oE 'https?://archive\.eol\.ucar\.edu[^"'"'"']*AspenV[0-9.]+_[A-Za-z0-9._]+_x86_64\.tar\.gz' <<<"$page_html" | sort -u)
 
 if [ "${#urls[@]}" -eq 0 ]; then

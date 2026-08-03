@@ -1,15 +1,4 @@
-#
 # install.ps1 - Windows bootstrap for the TAG workflow installer.
-#
-# Meant to be run either from a checked-out copy of this repo, or piped
-# straight from GitHub:
-#   irm https://raw.githubusercontent.com/jjmurdock19/tag-workflow-installer/main/install.ps1 | iex
-#
-# Fetches the full repo (git clone if available, else a zip download), then
-# runs the Windows sub-installers and (optionally) wires up the "TAG Workflow"
-# shortcut. Everything happens under a user-owned install root - no admin
-# rights are used anywhere in this script or the ones it calls.
-#
 [CmdletBinding()]
 param(
     [string]$InstallDir,
@@ -20,7 +9,6 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# --- sanity-check we're actually on Windows ---
 $onWindows = $true
 if ($PSVersionTable.PSVersion.Major -ge 6) {
     $onWindows = [bool]$IsWindows
@@ -35,7 +23,6 @@ if (-not $onWindows) {
 
 $installDirExplicit = $PSBoundParameters.ContainsKey('InstallDir')
 
-# --- install location ---
 if (-not $InstallDir) {
     $InstallDir = if ($env:TAG_HOME) { $env:TAG_HOME } else { Join-Path $env:USERPROFILE 'tag' }
 }
@@ -48,8 +35,6 @@ $env:TAG_HOME = $InstallDir
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Write-Host "Installing TAG workflow tools to: $InstallDir"
 
-# --- shortcut preference (threaded through to the sub-installers, and used
-#     for the top-level "TAG Workflow" shortcut below) ---
 $wantShortcuts = -not $NoShortcuts
 if ($wantShortcuts -and -not $Yes) {
     $resp = Read-Host "Create Desktop/Start Menu shortcuts? [Y/n]"
@@ -57,7 +42,6 @@ if ($wantShortcuts -and -not $Yes) {
 }
 $noShortcutsFlag = -not $wantShortcuts
 
-# --- fetch this repo ---
 $repoUrl = 'https://github.com/jjmurdock19/tag-workflow-installer.git'
 $srcDir  = Join-Path $InstallDir 'src\tag-workflow-installer'
 New-Item -ItemType Directory -Force -Path (Split-Path $srcDir -Parent) | Out-Null
@@ -103,7 +87,6 @@ else {
 $windowsDir   = Join-Path $srcDir 'windows'
 $tagSetupPath = Join-Path $windowsDir 'Tag-Setup.ps1'
 
-# --- run sub-installers ---
 $subArgs = @{ InstallDir = $InstallDir }
 if ($Yes) { $subArgs.Yes = $true }
 if ($noShortcutsFlag) { $subArgs.NoShortcuts = $true }
@@ -116,7 +99,6 @@ Write-Host ""
 Write-Host "=== Installing TAG Downloader ==="
 & (Join-Path $windowsDir 'Install-TagDownloader.ps1') @subArgs
 
-# --- top-level "TAG Workflow" shortcut ---
 if ($wantShortcuts) {
     try {
         . (Join-Path $windowsDir 'lib\Shortcuts.ps1')

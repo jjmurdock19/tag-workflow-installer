@@ -1,14 +1,9 @@
-#
 # Install-Aspen.ps1
 #
-# Aspen only ships a closed, interactive Windows installer. We can't verify
-# silent-install flags without a Windows box, so: download the installer,
-# launch it interactively, and have the user point it at $TAG_HOME\opt\Aspen
-# so nothing under Program Files (and thus no UAC prompt) is touched. We then
-# search for the resulting Aspen.exe and persist its path for Tag-Setup.ps1.
-#
-# No admin rights are used anywhere in this script.
-#
+# Aspen only ships an interactive Windows installer, so this downloads it,
+# launches it, and has the user point it at $TAG_HOME\opt\Aspen to avoid
+# Program Files / UAC. Then it locates the resulting Aspen.exe and saves
+# its path for Tag-Setup.ps1.
 [CmdletBinding()]
 param(
     [string]$InstallDir = $(if ($env:TAG_HOME) { $env:TAG_HOME } else { Join-Path $env:USERPROFILE 'tag' }),
@@ -57,7 +52,6 @@ if ($linkMatches.Count -eq 0) {
     exit 1
 }
 
-# Highest version wins; ties broken by first-found (mirrors the Linux script's `sort -V` + pick-last semantics).
 $seenUrls = New-Object 'System.Collections.Generic.HashSet[string]'
 $best = $null
 foreach ($m in $linkMatches) {

@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# Clones/updates and builds TAG_Downloader from
-# https://github.com/jjmurdock19/TAG_Downloader, then (re)creates the
-# desktop + start menu launcher for the built binary.
-#
-# Standalone-runnable: defaults TAG_HOME to ~/.tag if not already exported.
+# Clones/builds TAG_Downloader and creates its shortcuts.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,8 +40,7 @@ if [ ! -d "$VENV_DIR" ]; then
 fi
 source "$VENV_DIR/bin/activate"
 pip install --quiet --upgrade pip
-# pyinstaller's pin in requirements.txt may predate this system's python3;
-# install everything else pinned, then let pyinstaller float to a compatible version.
+# pyinstaller pin may predate this system's python3, so let it float
 pip install --quiet $(grep -vi '^pyinstaller' "$SRC_DIR/requirements.txt")
 pip install --quiet pyinstaller
 

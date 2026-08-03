@@ -1,10 +1,7 @@
-#
 # Install-TagDownloader.ps1
 #
-# Clones/pulls TAG_Downloader, builds it into a standalone .exe with PyInstaller
-# inside a per-user venv, and installs it under $TAG_HOME\opt\TAG_Downloader.
-# Entirely user-space (no admin rights required anywhere).
-#
+# Clones/builds TAG_Downloader into a standalone .exe via PyInstaller in a
+# per-user venv, and installs it under $TAG_HOME\opt\TAG_Downloader.
 [CmdletBinding()]
 param(
     [string]$InstallDir = $(if ($env:TAG_HOME) { $env:TAG_HOME } else { Join-Path $env:USERPROFILE 'tag' }),
@@ -47,7 +44,6 @@ if (-not $pythonCmd) {
     exit 1
 }
 
-# --- fetch source ---
 $gitCmd = Get-Command git -ErrorAction SilentlyContinue
 if ($gitCmd) {
     if (Test-Path (Join-Path $SrcDir '.git')) {
@@ -86,7 +82,6 @@ else {
     Move-Item -Path $extracted.FullName -Destination $SrcDir
 }
 
-# --- venv + deps ---
 if (-not (Test-Path $VenvDir)) {
     Write-Host "Creating virtual environment..."
     & $pythonCmd -m venv $VenvDir
@@ -104,8 +99,7 @@ $requirementsPath = Join-Path $SrcDir 'requirements.txt'
 if (-not (Test-Path $requirementsPath)) {
     throw "requirements.txt not found at $requirementsPath"
 }
-# Drop any pinned pyinstaller line - the pin may predate this system's Python;
-# install pyinstaller unpinned afterward instead (mirrors the Linux script).
+# pyinstaller pin may predate this system's Python, so drop it and install unpinned below
 $reqLines = Get-Content $requirementsPath | Where-Object { $_.Trim() -ne '' -and $_ -notmatch '^\s*pyinstaller\s*([=<>!~].*)?$' }
 if ($reqLines) {
     $tempReq = Join-Path $env:TEMP 'tag_downloader_requirements.txt'
@@ -116,7 +110,6 @@ if ($reqLines) {
 & $venvPip install --quiet pyinstaller
 Assert-Success "pip install pyinstaller failed"
 
-# --- build ---
 Write-Host "Building TAG_Downloader.exe with PyInstaller..."
 $distPath = Join-Path $SrcDir 'dist'
 $workPath = Join-Path $SrcDir 'build'

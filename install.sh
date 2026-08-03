@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
-# One-stop installer for the TAG workflow (Aspen + TAG Downloader + tag-setup)
-# on Linux. Meant to be run either directly from a checked-out copy of this
-# repo, or piped straight from GitHub:
-#
-#   curl -fsSL https://raw.githubusercontent.com/jjmurdock19/tag-workflow-installer/main/install.sh | bash
-#
-# Requires no admin/sudo privileges. Everything is installed under a
-# user-owned directory (default: ~/.tag, override with --install-dir or the
-# TAG_HOME env var).
+# Installs Aspen + TAG Downloader + tag-setup under a user-owned directory.
 set -euo pipefail
 
 REPO_URL="${TAG_INSTALLER_REPO_URL:-https://github.com/jjmurdock19/tag-workflow-installer}"
@@ -57,7 +49,6 @@ fi
 echo "=== TAG workflow installer ==="
 echo
 
-# --- Install location -------------------------------------------------
 if [ -z "$INSTALL_DIR" ]; then
     if [ "$ASSUME_YES" = "1" ]; then
         INSTALL_DIR="$DEFAULT_TAG_HOME"
@@ -66,14 +57,12 @@ if [ -z "$INSTALL_DIR" ]; then
         INSTALL_DIR="${reply:-$DEFAULT_TAG_HOME}"
     fi
 fi
-# Expand ~ if the user typed it at the prompt.
 INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
 export TAG_HOME="$INSTALL_DIR"
 mkdir -p "$TAG_HOME"
 echo "Installing to: $TAG_HOME"
 echo
 
-# --- Shortcuts ----------------------------------------------------------
 if [ -z "$WANT_SHORTCUTS" ]; then
     if [ "$ASSUME_YES" = "1" ]; then
         WANT_SHORTCUTS=1
@@ -92,7 +81,6 @@ else
 fi
 echo
 
-# --- Fetch this repo into a persistent, updatable checkout --------------
 SRC_DIR="$TAG_HOME/src/tag-workflow-installer"
 mkdir -p "$TAG_HOME/src"
 if command -v git >/dev/null 2>&1; then
@@ -115,7 +103,6 @@ else
 fi
 echo
 
-# --- Install Aspen + TAG Downloader --------------------------------------
 echo "--- Installing Aspen ---"
 "$SRC_DIR/linux/install-aspen.sh"
 echo
@@ -124,7 +111,6 @@ echo "--- Installing TAG Downloader ---"
 "$SRC_DIR/linux/install-tag-downloader.sh"
 echo
 
-# --- tag-setup command + "TAG Workflow" shortcut -------------------------
 echo "--- Setting up tag-setup ---"
 mkdir -p "$TAG_HOME/bin"
 install -m 0755 "$SRC_DIR/linux/tag-setup.sh" "$TAG_HOME/bin/tag-setup"
